@@ -4,3 +4,8 @@ langchain
 langchain_huggingface
 python-dotenv
 mysql-connector-python
+magic-wormhole
+sycamore-ai
+sycamore-ai[pinecone]
+Flask
+Flask-Cors
