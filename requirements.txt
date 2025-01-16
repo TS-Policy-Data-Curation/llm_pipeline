@@ -1,11 +1,13 @@
-langchain_community
-langchain_anthropic
+langchain-community
+langchain-anthropic
 langchain
-langchain_huggingface
+langchain-huggingface
+langchain-google-genai
+langchain-openai
 python-dotenv
 mysql-connector-python
 magic-wormhole
 sycamore-ai
-sycamore-ai[pinecone]
 Flask
 Flask-Cors
+pandas

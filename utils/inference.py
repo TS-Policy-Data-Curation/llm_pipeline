@@ -1,88 +1,80 @@
-from langchain_community.vectorstores import SingleStoreDB
-from langchain_anthropic import ChatAnthropic
-from langchain.chains import RetrievalQAWithSourcesChain
-from langchain_huggingface import HuggingFaceEmbeddings
+from ast import literal_eval
 import os
+import getpass
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
 
-def create_qa_chain(cursor, connection) -> RetrievalQAWithSourcesChain:
-    # Initialize LangChain components
+
+model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
+
+
+def format_time_series(time_series: list[tuple[str, str]]) -> str:
+    if type(time_series) != list:
+        time_series = literal_eval(time_series)
+    return "\n".join([f"({date}, {value})" for date, value in time_series])
+
+
+def get_api_key(key_name: str = "ANTHROPIC_API_KEY") -> str:
+    if os.environ.get(key_name):
+        return os.environ[key_name]
+    return getpass.getpass("Enter your API key: ")
+
+
+def get_gemini_llm(temp: float):
+    api_key = get_api_key("GOOGLE_API_KEY")
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-1.5-pro",
+        temperature=temp,
+        max_retries=2,
+        api_key=api_key,
+    )
+    return llm
+
+
+def get_openai_llm(temp: float):
+    api_key = get_api_key("OPENAI_API_KEY")
+    llm = ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=temp,
+        max_retries=2,
+        api_key=api_key,
+    )
+    return llm
+
+
+def get_anthropic_llm(temp: float):
+    api_key = get_api_key("ANTHROPIC_API_KEY")
     llm = ChatAnthropic(
-        api_key=os.environ["ANTHROPIC_API_KEY"],
-        model_name='claude-3-5-sonnet-20241022',
-        temperature=0.8
+        model="claude-3-5-sonnet-20241022",
+        temperature=temp,
+        max_retries=2,
+        api_key=api_key,
     )
 
-    embeddings = HuggingFaceEmbeddings(model_name="thenlper/gte-small")
+    return llm
 
-    # Initialize SingleStore vector store
-    vector_store = SingleStoreDB(
-        embedding=embeddings,
-        host=os.environ["SINGLESTORE_HOST"],
-        port=os.environ["SINGLESTORE_PORT"],
-        user=os.environ["SINGLESTORE_USER"],
-        password=os.environ["SINGLESTORE_PASSWORD"],
-        database=os.environ["SINGLESTORE_DATABASE"],
-        table_name="document_embeddings",
-        vector_field="embedding",  # Field containing the embeddings
-        content_field="text_representation",  # Field containing the text
-        metadata_field="metadata" # Field containing the metadata
+
+def create_policy_chain(llm):
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "You are given a time series from real world data and its description. You are responsible for"
+                "identifying a policy that may have affected the time series."
+                "You may reason in a block enclosed by <SCRATCH></SCRATCH>. Afterwards, only the description of the"
+                "policy should be returned.",
+            ),
+            (
+                "user",
+                "Identify a policy that may have affected this time series."
+                "Description:\n{description}\n"
+                "Time Series Data:\n{time_series}",
+            ),
+        ]
     )
 
-    # Create retrieval chain
-    qa = RetrievalQAWithSourcesChain.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=vector_store.as_retriever(),
-        verbose=True,
-        return_source_documents=True
-    )
+    chain = prompt | llm
 
-    # Close the cursor and connection
-    cursor.close()
-    connection.close()
-
-    return qa
-
-def query_vector_store(query: str, qa_chain: RetrievalQAWithSourcesChain):
-    # Perform similarity search using the vector store
-    relevant_documents = qa_chain.retriever.vectorstore.similarity_search(query, k=1)
-
-    # Use the LLM to generate an answer based on the retrieved documents
-    result = qa_chain({"question": query, "documents": relevant_documents})
-
-    # qa_response = {
-    #     "answer": result.get("answer", "No answer found."),  # LLM's generated answer
-    #     "sources": result.get("sources", []),  # Sources used by the LLM
-    #     "source_documents": result.get("source_documents", [])  # Retrieved documents
-    # }
-
-    qa_response = {
-        "answer": result.get("answer", "No answer found.")
-    }
-    
-    return qa_response
-
-# def query_vector_store(query: str, qa_chain: RetrievalQAWithSourcesChain):
-#     # Perform similarity search using the vector store
-#     relevant_documents = qa_chain.retriever.vectorstore.similarity_search(query, k=1)
-
-#     # Convert the relevant documents to serializable format
-#     # Assuming each document has 'page_content' and 'metadata' attributes
-#     serializable_documents = [
-#         {"text": doc.page_content, "metadata": doc.metadata}  # Adjust this based on your document structure
-#         for doc in relevant_documents
-#     ]
-
-#     print(relevant_documents)
-
-#     # Use the LLM to generate an answer based on the retrieved documents
-#     result = qa_chain({"question": query, "documents": serializable_documents})
-
-#     # Create qa_response
-#     qa_response = {
-#         "answer": result.get("answer", "No answer found."),
-#         "sources": result.get("sources", []),
-#         "documents": serializable_documents  # Including the serialized documents
-#     }
-
-#     return result, qa_response
+    return chain
