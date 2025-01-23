@@ -10,8 +10,16 @@ pip install -r requirements.txt
 ```
 
 ### Run
-To run the entir doc parsing and vectorization pipeline. It will also create a qa object that can be used to do a RAG query top the vector store to similarity search for realted documents to the input query
+To download the FRED data from gcloud:
 
 ```bash
-python main.py
+export GOOGLE_APPLICATION_CREDENTIALS="./service-account-key.json"
+
+gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+
+gsutil cp gs://humun-storage/path/in/bucket/fred.parquet .
+
+python convert_parquet_to_csv.py 
+
+python split_fred.py 
 ```

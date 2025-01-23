@@ -7,8 +7,9 @@ langchain-openai
 python-dotenv
 mysql-connector-python
 magic-wormhole
-sycamore-ai
+# sycamore-ai
 Flask
 Flask-Cors
 pandas
 gcsfs
+pyarrow
