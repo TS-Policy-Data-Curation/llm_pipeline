@@ -11,3 +11,4 @@ sycamore-ai
 Flask
 Flask-Cors
 pandas
+gcsfs
