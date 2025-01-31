@@ -8,7 +8,7 @@ from sycamore.llms.openai import OpenAIModels, OpenAI
 from sycamore.data import Element, Document
 from utils.embeddings import embed_docs
 from utils.singlestore import write_to_singlestore
-from utils.inference import create_qa_chain, query_vector_store
+from policy_gen.inference import create_qa_chain, query_vector_store
 from utils.data_loading import load_docs
 from utils.transform_docs import tableglom
 from sycamore.transforms.partition import ArynPartitioner

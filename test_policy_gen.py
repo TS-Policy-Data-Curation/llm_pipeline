@@ -1,7 +1,7 @@
 import argparse
 import pandas as pd
-from utils.inference import create_policy_chain, format_time_series, summarize_policy_chain
-from utils.inference import get_anthropic_llm, get_gemini_llm, get_openai_llm
+from inference import create_policy_chain, format_time_series, summarize_policy_chain
+from inference import get_anthropic_llm, get_gemini_llm, get_openai_llm
 import logging
 from dotenv import load_dotenv
 
