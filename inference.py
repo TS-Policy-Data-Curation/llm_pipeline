@@ -109,9 +109,7 @@ def create_policy_chain(llm):
     return chain
 
 def summarize_policy_chain(llm):
-    
-    '''Creates a pipeline that prompts the LLM to summarize a policy based on a description of the policy.'''
-    
+        
     prompt = ChatPromptTemplate.from_messages(
         [
             (
@@ -124,6 +122,27 @@ def summarize_policy_chain(llm):
                 "user",
                 "Summarize the policy described below:\n{policy_description}",
             ),
+        ]
+    )
+
+    chain = prompt | llm
+
+    return chain
+
+def create_autograder_chain(llm):
+    
+    '''Compund system that uses another LLM to grade the response of another model based on a rubric'''
+    
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "You are given a response from a language model that proposed public policies aimed at explaining time series data."
+                "Additionally, you will be provided a rubric to evaluate the response on."
+                "You may reason in a block enclosed by <SCRATCH></SCRATCH>. Afterwards, only the grade of the langauge model response"
+                "should be returned.",
+            ),
+            ('user', 'Rubric:\n{rubric_prompt}\nGrade the response based on the rubric:\n{llm_response}')
         ]
     )
 
