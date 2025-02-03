@@ -4,7 +4,7 @@ from langchain_openai.chat_models.base import BaseChatOpenAI
 
 llm = BaseChatOpenAI(
     model='deepseek-chat', 
-    openai_api_key='<your api key>', 
+    openai_api_key='', 
     openai_api_base='https://api.deepseek.com',
     max_tokens=1024
 )

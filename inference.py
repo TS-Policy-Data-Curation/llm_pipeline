@@ -4,6 +4,7 @@ import getpass
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
+from langchain_openai.chat_models.base import BaseChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 
 
@@ -60,6 +61,21 @@ def get_anthropic_llm(temp: float):
         temperature=temp,
         max_retries=2,
         api_key=api_key,
+    )
+
+    return llm
+
+def get_deepseek_llm(temp: float):
+
+    '''Creates an instance of the ChatAnthropic class using claude 3.5 sonnet LLM with the specified temperature.'''
+
+    api_key = get_api_key("DEEPSEEK_API_KEY")
+    llm = BaseChatOpenAI(
+        model='deepseek-chat', 
+        openai_api_key=api_key, 
+        openai_api_base='https://api.deepseek.com',
+        temperature=temp,
+        max_retries=2,
     )
 
     return llm
